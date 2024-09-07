@@ -62,7 +62,7 @@ export default function Page() {
     return () => {
       imageUrl && URL.revokeObjectURL(imageUrl);
     };
-  }, []);
+  }, [imageUrl]);
 
   const reset = () => {
     handleRemoveFile();
@@ -296,7 +296,7 @@ export default function Page() {
                           <p className="font-bold mb-2">感情</p>
                           <ul>
                             {Emotions?.map(({ Type, Confidence }) => (
-                              <li className="flex items-center text-sm">
+                              <li key={Type} className="flex items-center text-sm">
                                 <p className="w-16 shrink-0">{emotionLabels[Type || 'UNKNOWN']}</p>
                                 <Progress value={Confidence} />
                               </li>
