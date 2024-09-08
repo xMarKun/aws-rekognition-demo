@@ -9,6 +9,10 @@ const pages = [
     path: '/image-face-detection',
     title: 'イメージ内の顔を検知',
   },
+  {
+    path: '/image-compare-faces',
+    title: 'イメージ間の顔の比較',
+  },
 ];
 
 export default function Navbar() {

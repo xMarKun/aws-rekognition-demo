@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { DetectFacesCommandInput } from '@aws-sdk/client-rekognition';
 
-import rekognitionClient from '@/lib/rekognition-client';
+import rekognitionClient, { maxFileSize, supportedMimeTypes } from '@/lib/rekognition-client';
 import ErrorHandler from '@/lib/error-handler';
-
-const supportedMimeTypes = ['image/jpeg', 'image/png'];
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +17,7 @@ export async function POST(request: NextRequest) {
       return ErrorHandler.invalidImageFormatError();
     }
     // ファイルサイズが5MBより大きかったら
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > maxFileSize) {
       return ErrorHandler.ImageTooLargeError();
     }
 

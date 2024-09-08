@@ -1,9 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { Loader2Icon } from 'lucide-react';
 import { ChevronDownIcon, Cross1Icon, ImageIcon } from '@radix-ui/react-icons';
-import type { BoundingBox, EmotionName, FaceDetail, Landmark } from '@aws-sdk/client-rekognition';
+import type { EmotionName, FaceDetail } from '@aws-sdk/client-rekognition';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import ImagePreviewDialog from '@/components/image-preview-dialog';
 import Dropzone from '@/components/dropzone';
 import useImageFaceDetection from '@/hooks/use-image-face-detection';
+import RekognitionVisualizer from '@/components/rekognition-visualizer';
 
 const emotionLabels: { [key in EmotionName]: string } = {
   HAPPY: '喜び',
@@ -69,20 +69,6 @@ export default function Page() {
     setFaceDetails(null);
   };
 
-  const calcFaceBounding = (boundingBox: BoundingBox) => {
-    const faceTop = (boundingBox.Top || 0) * 100,
-      faceLeft = (boundingBox.Left || 0) * 100,
-      faceWidth = (boundingBox.Width || 0) * 100,
-      faceHeight = (boundingBox.Height || 0) * 100;
-    return { faceTop, faceLeft, faceWidth, faceHeight };
-  };
-
-  const calcLandmark = (landmark: Landmark) => {
-    const x = (landmark.X || 0) * 100,
-      y = (landmark.Y || 0) * 100;
-    return { x, y };
-  };
-
   return (
     <>
       <h1 className="text-lg font-bold">イメージ内の顔を検知</h1>
@@ -95,50 +81,13 @@ export default function Page() {
               <CardDescription>{image.name} の画像で検出された情報を表示しています。</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="relative w-fit h-fit mx-auto">
-                <Image
-                  src={imageUrl}
-                  alt=""
-                  width={imageSize.width}
-                  height={imageSize.height}
-                  className="max-h-[calc(100dvh_/_1.5)] w-auto pointer-events-none"
-                />
-                {faceDetails.map(({ BoundingBox, Landmarks }, index) => {
-                  const { faceTop, faceLeft, faceWidth, faceHeight } = calcFaceBounding(BoundingBox || {});
-                  return (
-                    <div
-                      key={faceTop + faceLeft + faceWidth + faceHeight}
-                      className="absolute inset-0 pointer-events-none"
-                    >
-                      <div
-                        className="absolute border border-green-400 peer pointer-events-auto"
-                        style={{
-                          top: `${faceTop}%`,
-                          left: `${faceLeft}%`,
-                          width: `${faceWidth}%`,
-                          height: `${faceHeight}%`,
-                        }}
-                      ></div>
-                      <div
-                        className="absolute text-xs rounded-full bg-secondary px-1 opacity-30 hover:opacity-100 hover:z-10 peer-hover:opacity-100 peer-hover:z-10 pointer-events-auto"
-                        style={{ top: `calc(${faceTop}% - 20px)`, left: `${faceLeft}%` }}
-                      >
-                        Person{`00${index + 1}`.slice(-3)}
-                      </div>
-                      {Landmarks?.map(({ Type, ...landmark }) => {
-                        const { x, y } = calcLandmark(landmark);
-                        return (
-                          <div
-                            key={Type}
-                            className="absolute w-[1px] h-[1px] sm:w-0.5 sm:h-0.5 rounded-full bg-green-400"
-                            style={{ top: `${y}%`, left: `${x}%` }}
-                          ></div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
+              <RekognitionVisualizer
+                image={{ src: imageUrl, width: imageSize.width, height: imageSize.height }}
+                faceDetails={faceDetails.map(({ BoundingBox, Landmarks }) => ({
+                  boundingBox: BoundingBox,
+                  landmarks: Landmarks,
+                }))}
+              />
               <div className="mt-4 space-y-3">
                 {faceDetails.map(
                   (
